@@ -3,14 +3,14 @@
 	"private": true,
 	"type": "module",
 	"dependencies": {
-		"@flue/runtime": "workspace:*",
-		"agents": "*",
-		"hono": "^4.7.0",
-		"valibot": "^1.0.0"
+		"@flue/runtime": "^0.9.2",
+		"agents": "^0.14.5",
+		"hono": "^4.12.23",
+		"valibot": "^1.4.1"
 	},
 	"devDependencies": {
-		"@cloudflare/workers-types": "^4.20260505.1",
-		"@flue/cli": "workspace:*",
-		"wrangler": "^4.87.0"
+		"@cloudflare/workers-types": "^4.20260607.1",
+		"@flue/cli": "^0.9.2",
+		"wrangler": "^4.98.0"
 	}
 }
