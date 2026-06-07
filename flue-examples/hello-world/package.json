@@ -1,16 +1,16 @@
 {
-	"name": "claude-blog-flue",
+	"name": "hello-world",
 	"private": true,
 	"type": "module",
 	"dependencies": {
 		"@flue/runtime": "workspace:*",
+		"@daytona/sdk": "*",
 		"agents": "*",
 		"hono": "^4.7.0",
+		"just-bash": "^3.0.1",
 		"valibot": "^1.0.0"
 	},
 	"devDependencies": {
-		"@cloudflare/workers-types": "^4.20260505.1",
-		"@flue/cli": "workspace:*",
-		"wrangler": "^4.87.0"
+		"@flue/cli": "workspace:*"
 	}
 }

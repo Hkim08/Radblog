@@ -1,0 +1,18 @@
+{
+  "id": "0d9853e1-176b-4296-9765-5bcc877d4322",
+  "name": "Session 1",
+  "created": "2026-06-07T16:40:15.460Z",
+  "updated": "2026-06-07T16:40:29.763Z",
+  "messages": [
+    {
+      "role": "user",
+      "content": "hello",
+      "ts": "2026-06-07T16:40:23.544Z"
+    },
+    {
+      "role": "assistant",
+      "content": "Hello! 👋 Welcome to your blog creation and optimization assistant.\n\nI'm here to help you with everything related to content creation, SEO optimization, and blog management. Here's what I can do for you:\n\n**📝 Write & Optimize Blog Posts**\n- Research topics and gather current statistics\n- Write high-quality, SEO-optimized articles\n- Review and score content quality\n- Validate on-page SEO\n\n**⚡ Available Workflows**\n- `blog-write` — Full pipeline from research to final post\n- `blog-outline` — Create structured outlines\n- `blog-brief` — Generate content briefs with competitor analysis\n- `blog-rewrite` — Improve existing posts\n- `blog-schema` — Add JSON-LD structured data\n- `blog-translate` / `blog-localize` — Reach global audiences\n- And many more...\n\n**📁 Working Directory:** `./workspace/` — All files are saved here.\n\nJust let me know what you'd like to work on — whether it's a new blog post topic, optimizing an existing article, or building a full content strategy. What can I help you with today? 🚀",
+      "ts": "2026-06-07T16:40:29.762Z"
+    }
+  ]
+}
