@@ -1,117 +1,344 @@
 /**
  * Cloudflare Workers app entry point.
- * Session persistence is handled by Flue's Durable Object-backed runtime.
+ * Simple, clean chat interface with Flue agent integration.
  */
-import { registerProvider } from '@flue/runtime';
 import { flue } from '@flue/runtime/routing';
 import { Hono } from 'hono';
 
 const app = new Hono();
 
-// ── Shared HTML fragments ──
-const style = `<style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,Cantarell,sans-serif;background:#f5f5f5;color:#333}
-nav{background:#1a1a2e;padding:1rem 2rem;display:flex;gap:1.5rem;align-items:center}
-nav a{color:#fff;text-decoration:none;font-size:.95rem;padding:.25rem .5rem;border-radius:4px}
-nav a:hover{background:rgba(255,255,255,.1)}
-nav .brand{font-weight:700;font-size:1.1rem;margin-right:auto}
-.container{max-width:1000px;margin:2rem auto;padding:0 1rem}
-.card{background:#fff;border-radius:8px;padding:1.5rem;box-shadow:0 1px 3px rgba(0,0,0,.1);margin-bottom:1.5rem}
-h1{font-size:1.5rem;margin-bottom:1rem}
-h2{font-size:1.2rem;margin-bottom:.75rem;color:#555}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1rem;margin-bottom:2rem}
-.stat-card{background:#1a1a2e;color:#fff;padding:1.5rem;border-radius:8px;text-align:center}
-.stat-card .num{font-size:2rem;font-weight:700}
-.stat-card .label{font-size:.85rem;opacity:.8;margin-top:.25rem}
-.agents{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1.5rem}
-.agents span{background:#e8e8f0;padding:.35rem .75rem;border-radius:4px;font-size:.9rem}
-table{width:100%;border-collapse:collapse}
-th,td{text-align:left;padding:.6rem .75rem;border-bottom:1px solid #eee}
-th{font-weight:600;color:#555;font-size:.85rem;text-transform:uppercase}
-.btn{display:inline-block;padding:.5rem 1rem;border-radius:6px;text-decoration:none;font-size:.9rem;cursor:pointer;border:none}
-.btn-primary{background:#1a1a2e;color:#fff}
-.btn-primary:hover{background:#2d2d5e}
-.btn-outline{background:transparent;color:#1a1a2e;border:1px solid #1a1a2e}
-.btn-outline:hover{background:#1a1a2e;color:#fff}
-.landing-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:2rem;margin-top:2rem}
-.landing-card{background:#fff;border-radius:12px;padding:2.5rem;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.1)}
-.landing-card h2{font-size:1.3rem;margin-bottom:.5rem;color:#333}
-.landing-card p{color:#666;margin-bottom:1.5rem}
-.landing-card .btn{font-size:1rem;padding:.75rem 2rem}
-.landing-hero{text-align:center;padding:4rem 0 2rem}
-.landing-hero h1{font-size:2.5rem;margin-bottom:.5rem}
-.landing-hero p{color:#666;font-size:1.1rem}
-.workflow-list{list-style:none;padding:0}
-.workflow-list li{padding:.5rem 0;border-bottom:1px solid #eee}
-.workflow-list li:last-child{border-bottom:none}
-#chat-messages{flex:1;overflow-y:auto;padding:1rem;min-height:400px;max-height:60vh}
-.chat-msg{margin-bottom:.75rem}
-.chat-msg .sender{font-weight:600;font-size:.85rem;color:#555}
-.chat-msg .text{margin-top:.15rem}
-.chat-input-area{display:flex;gap:.5rem;padding:1rem 0}
-.chat-input-area input{flex:1;padding:.6rem .75rem;border:1px solid #ddd;border-radius:6px;font-size:.95rem}
-.chat-input-area button{padding:.6rem 1.5rem}
-.chat-hint{font-size:.8rem;color:#999;margin-top:.5rem}
-#chat-layout{display:flex;height:75vh;border:1px solid #ddd;border-radius:8px;overflow:hidden}
-#chat-sidebar{width:220px;background:#fafafa;border-right:1px solid #ddd;display:flex;flex-direction:column;font-size:.85rem}
-#chat-sidebar-header{padding:.75rem;border-bottom:1px solid #ddd;font-weight:600;display:flex;justify-content:space-between;align-items:center}
-#chat-sidebar-list{flex:1;overflow-y:auto;padding:.25rem 0}
-.chat-session-item{padding:.5rem .75rem;cursor:pointer;border-left:3px solid transparent;display:flex;justify-content:space-between;align-items:center}
-.chat-session-item:hover{background:#eee}
-.chat-session-item.active{background:#e0e0f0;border-left-color:#1a1a2e;font-weight:600}
-.chat-session-item .name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
-.chat-session-item .del{color:#999;cursor:pointer;font-size:.8rem;padding:0 .25rem;display:none}
-.chat-session-item:hover .del{display:inline}
-.chat-session-item .del:hover{color:#f44336}
-#chat-main{flex:1;display:flex;flex-direction:column}
-</style>`;
-
-const nav = `<nav>
-<a href="/" class="brand">Blog Engine</a>
-<a href="/admin">Dashboard</a>
-<a href="/chat">Chat</a>
-</nav>`;
-
-const head = (title: string) =>
-	`<!DOCTYPE html><html lang="en"><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Blog Engine - ${title}</title>${style}</head><body>${nav}<div class="container">`;
-
-const foot = '</div></body></html>';
-
-// ── Landing page ──
+// ── Simple landing page ──────────────────────────────────────────────────────
 app.get('/', (c) =>
-	c.html(
-		`${head('Home')}<div class="landing-hero"><h1>Blog Engine</h1><p>AI-powered blog creation and optimization</p></div><div class="landing-cards"><div class="landing-card"><h2>Open Chat</h2><p>Interact with the blog orchestrator AI assistant</p><a href="/chat" class="btn btn-primary">Open Chat</a></div><div class="landing-card"><h2>Dashboard</h2><p>Manage workflows, agents, and blog posts</p><a href="/admin" class="btn btn-outline">Dashboard</a></div></div>${foot}`,
-	),
+  c.html(`<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Radblog - AI Blog Engine</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #fafafa; min-height: 100vh; }
+    nav { background: #1a1a1a; padding: 1rem 2rem; display: flex; gap: 1.5rem; align-items: center; }
+    nav a { color: #fff; text-decoration: none; font-size: 0.95rem; padding: 0.25rem 0.5rem; border-radius: 4px; }
+    nav a:hover { background: rgba(255,255,255,0.1); }
+    nav .brand { font-weight: 700; font-size: 1.1rem; margin-right: auto; }
+    .container { max-width: 800px; margin: 3rem auto; padding: 0 1.5rem; text-align: center; }
+    h1 { font-size: 2.5rem; margin-bottom: 0.5rem; }
+    p { color: #666; font-size: 1.1rem; margin-bottom: 2rem; }
+    .btn { display: inline-block; padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; font-size: 1rem; font-weight: 500; background: #10a37f; color: #fff; }
+    .btn:hover { background: #0d8a6a; }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="/" class="brand">Radblog</a>
+    <a href="/chat">Chat</a>
+  </nav>
+  <div class="container">
+    <h1>AI Blog Engine</h1>
+    <p>Create, optimize, and manage blog content with AI-powered workflows</p>
+    <a href="/chat" class="btn">Open Chat</a>
+  </div>
+</body>
+</html>`)
 );
 
-// ── Dashboard ──
-app.get('/admin', (c) => {
-	const agents = ['orchestrator', 'researcher', 'writer', 'seo', 'reviewer', 'translator'];
-	const workflows = [
-		'blog-write', 'blog-rewrite', 'blog-analyze', 'blog-outline', 'blog-brief',
-		'blog-calendar', 'blog-strategy', 'blog-cluster', 'blog-audit', 'blog-schema',
-		'blog-seo-check', 'blog-geo', 'blog-cannibalization', 'blog-repurpose',
-		'blog-translate', 'blog-localize', 'blog-locale-audit', 'blog-factcheck',
-		'blog-multilingual',
-	];
-	return c.html(
-		`${head('Dashboard')}<div class="stats"><div class="stat-card"><div class="num">6</div><div class="label">Agents</div></div><div class="stat-card"><div class="num">19</div><div class="label">Workflows</div></div></div><div class="card"><h2>Quick Actions</h2><p><a href="/chat" class="btn btn-primary">Write a Post</a></p></div><div class="card"><h2>Agents</h2><div class="agents">${agents.map((a) => `<span>${a}</span>`).join('')}</div></div><div class="card"><h2>Workflows</h2><ul class="workflow-list">${workflows.map((w) => `<li><code>${w}</code></li>`).join('')}</ul></div>${foot}`,
-	);
-});
+// ── Chat page - simple HTML string ──────────────────────────────────────────
+app.get('/chat', (c) =>
+  c.html(`<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat - Radblog</title>
+  <style>
+    :root { --bg: #fff; --bg2: #f7f7f8; --bg3: #ececf1; --bd: #e5e5e5; --tx: #1a1a1a; --tx2: #666; --tx3: #999; --ac: #10a37f; --ac2: #0d8a6a; }
+    @media (prefers-color-scheme: dark) { :root { --bg: #212121; --bg2: #2d2d2d; --bg3: #404040; --bd: #404040; --tx: #ececf1; --tx2: #a0a0a0; --tx3: #666; } }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--tx); display: flex; }
+    .app { display: flex; width: 100%; height: 100vh; overflow: hidden; }
+    .sidebar { width: 260px; background: var(--bg2); border-right: 1px solid var(--bd); display: flex; flex-direction: column; flex-shrink: 0; }
+    .sidebar-header { padding: 14px 16px; border-bottom: 1px solid var(--bd); display: flex; align-items: center; justify-content: space-between; }
+    .sidebar-title { font-size: 13px; font-weight: 600; }
+    .btn-new { background: var(--ac); color: #fff; border: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; font-weight: 500; }
+    .btn-new:hover { background: var(--ac2); }
+    .sidebar-list { flex: 1; overflow-y: auto; padding: 8px; }
+    .session { display: flex; align-items: center; padding: 8px 10px; border-radius: 6px; cursor: pointer; margin-bottom: 2px; }
+    .session:hover { background: var(--bg3); }
+    .session.active { background: var(--bg3); font-weight: 500; }
+    .session-name { flex: 1; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .session-del { opacity: 0; color: var(--tx3); background: none; border: none; cursor: pointer; padding: 2px 6px; font-size: 14px; border-radius: 4px; }
+    .session:hover .session-del { opacity: 1; }
+    .session-del:hover { color: #ef4444; }
+    .chat { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+    .chat-header { padding: 12px 20px; border-bottom: 1px solid var(--bd); display: flex; align-items: center; gap: 12px; }
+    .chat-header h2 { font-size: 14px; font-weight: 600; }
+    .badge { font-size: 11px; color: var(--tx3); background: var(--bg2); padding: 3px 8px; border-radius: 10px; }
+    .messages { flex: 1; overflow-y: auto; padding: 20px; }
+    .empty { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; color: var(--tx3); }
+    .empty h2 { font-size: 18px; color: var(--tx); margin-bottom: 6px; }
+    .empty p { font-size: 13px; }
+    .msg { display: flex; gap: 12px; margin-bottom: 20px; }
+    .msg.user { flex-direction: row-reverse; }
+    .msg-avatar { width: 28px; height: 28px; border-radius: 5px; background: var(--ac); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; flex-shrink: 0; }
+    .msg-body { max-width: 600px; font-size: 14px; line-height: 1.5; }
+    .msg.user .msg-body { background: var(--ac); color: #fff; padding: 8px 12px; border-radius: 12px 12px 4px 12px; }
+    .msg-content { white-space: pre-wrap; word-break: break-word; }
+    .typing { display: flex; gap: 4px; padding: 4px 0; }
+    .typing span { width: 6px; height: 6px; background: var(--tx3); border-radius: 50%; animation: dot 1.2s infinite; }
+    .typing span:nth-child(2) { animation-delay: 0.15s; }
+    .typing span:nth-child(3) { animation-delay: 0.3s; }
+    @keyframes dot { 0%, 60%, 100% { transform: translateY(0); } 30% { transform: translateY(-4px); } }
+    .input-area { padding: 12px 16px 16px; border-top: 1px solid var(--bd); }
+    .input-box { display: flex; gap: 8px; background: var(--bg2); border: 1px solid var(--bd); border-radius: 12px; padding: 8px 12px; }
+    .input-box:focus-within { border-color: var(--ac); }
+    .input-box textarea { flex: 1; border: none; background: transparent; resize: none; font-size: 14px; color: var(--tx); outline: none; min-height: 22px; max-height: 120px; font-family: inherit; line-height: 1.4; }
+    .input-box textarea::placeholder { color: var(--tx3); }
+    .btn-send { background: var(--ac); color: #fff; border: none; padding: 6px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 500; align-self: flex-end; }
+    .btn-send:hover { background: var(--ac2); }
+    .btn-send:disabled { opacity: 0.4; cursor: not-allowed; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <span class="sidebar-title">Sessions</span>
+        <button class="btn-new" id="btnNew">+ New</button>
+      </div>
+      <div class="sidebar-list" id="sessionList"></div>
+    </aside>
+    <main class="chat">
+      <header class="chat-header">
+        <h2 id="chatTitle">New Chat</h2>
+        <span class="badge">Orchestrator</span>
+      </header>
+      <div class="messages" id="messages">
+        <div class="empty">
+          <h2>Start a conversation</h2>
+          <p>Ask me anything about blog writing, SEO, or content strategy.</p>
+        </div>
+      </div>
+      <div class="input-area">
+        <div class="input-box">
+          <textarea id="input" placeholder="Type a message..." rows="1"></textarea>
+          <button class="btn-send" id="btnSend">Send</button>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script>
+(function() {
+  var currentSession = null;
+  var sessions = [];
+  var isGenerating = false;
 
-// ── Chat page ──
-app.get('/chat', (c) => {
-	const html = `${head('Chat')}<div id="chat-layout"><div id="chat-sidebar"><div id="chat-sidebar-header"><span>Sessions</span><button class="btn btn-primary" style="padding:.25rem .5rem;font-size:.8rem" onclick="newSession()">+</button></div><div id="chat-sidebar-list"></div></div><div id="chat-main"><div id="chat-messages" style="flex:1;overflow-y:auto;padding:1rem"><div class="chat-msg"><div class="sender">System</div><div class="text">Select a session or create a new one to start chatting.</div></div></div><div style="padding:0 1rem 1rem;border-top:1px solid #eee"><div class="chat-input-area"><input type="text" id="chat-input" placeholder="Select a session to chat" disabled /><button class="btn btn-primary" id="send-btn" disabled>Send</button></div><div class="chat-hint">Chat with the blog orchestrator</div></div></div></div><script src="/chat.js"></script>${foot}`;
-	return c.html(html);
-});
+  var elSessionList = document.getElementById('sessionList');
+  var elMessages = document.getElementById('messages');
+  var elChatTitle = document.getElementById('chatTitle');
+  var elInput = document.getElementById('input');
+  var elBtnSend = document.getElementById('btnSend');
+  var elBtnNew = document.getElementById('btnNew');
 
-app.get('/chat.js', (c) => {
-	const js = `var msg=document.getElementById('chat-messages'),inp=document.getElementById('chat-input'),thi=document.getElementById('chat-thinking'),ws=null,curMsg=null,curText='',streamDone=false,curSid=null;function esc(t){return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}function md(t){var s=esc(t);s=s.replace(/\`\`\`(\w*)\n([\s\S]*?)\`\`\`/g,'<pre><code>$2</code></pre>');s=s.replace(/\`([^\`]+)\`/g,'<code>$1</code>');s=s.replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>');s=s.replace(/\*([^*]+)\*/g,'<em>$1</em>');return s}function formatTime(){var d=new Date(),h=d.getHours().toString().padStart(2,'0'),m=d.getMinutes().toString().padStart(2,'0');return h+':'+m}async function loadSessions(){try{const r=await fetch('/agents/orchestrator'),d=await r.json();if(d.sessions){var lst=document.getElementById('chat-sidebar-list');lst.innerHTML='';d.sessions.forEach(function(s){var div=document.createElement('div');div.className='chat-session-item'+(s.id===curSid?' active':'');div.innerHTML='<span class="name">'+esc(s.name||'Session')+'</span>';div.onclick=function(){selectSession(s.id)};lst.appendChild(div)})}}catch(e){console.error('Failed to load sessions:',e)}}async function newSession(){try{const r=await fetch('/agents/orchestrator',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({})}),s=await r.json();if(s.id){curSid=s.id;loadSessions();clearMessages();inp.disabled=false;document.getElementById('send-btn').disabled=false;inp.focus()}}catch(e){alert('Failed to create session')}}async function selectSession(id){curSid=id;loadSessions();clearMessages();inp.disabled=false;document.getElementById('send-btn').disabled=false;inp.focus()}function clearMessages(){msg.innerHTML=''}function addMessage(role,content){var div=document.createElement('div');div.className='chat-msg';div.innerHTML='<div class="sender">'+(role==='user'?'You':role==='assistant'?'Orchestrator':'System')+'</div><div class="text">'+md(content)+'</div>';msg.appendChild(div);msg.scrollTop=msg.scrollHeight}async function sendMessage(){var text=inp.value.trim();if(!text)return;inp.value='';addMessage('user',text);curMsg=document.createElement('div');curMsg.className='chat-msg';curMsg.innerHTML='<div class="sender">Orchestrator</div><div class="text"></div>';msg.appendChild(curMsg);curText='';streamDone=false;msg.scrollTop=msg.scrollHeight;try{const r=await fetch('/agents/orchestrator/'+curSid+'/stream',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:[{role:'user',content:text,ts:new Date().toISOString()}]})});if(r.ok){const reader=r.body.getReader();const decoder=new TextDecoder;while(true){const {done,value}=await reader.read();if(done)break;curText+=decoder.decode(value);curMsg.querySelector('.text').innerHTML=md(curText);msg.scrollTop=msg.scrollHeight}}streamDone=true}catch(e){curMsg.querySelector('.text').innerHTML='<span style="color:red">Error: '+esc(e.message)+'</span>'}}document.getElementById('send-btn').onclick=sendMessage;inp.onkeydown=function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage()}};loadSessions();`;
-	return c.text(js, 200, { 'Content-Type': 'application/javascript' });
-});
+  function escapeHtml(text) {
+    var div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
 
-// ── Flue catch-all (MUST be last) — includes /agents/*, /workflows/*, etc. ──
+  function renderSessions() {
+    elSessionList.innerHTML = '';
+    sessions.forEach(function(s) {
+      var div = document.createElement('div');
+      div.className = 'session' + (s.id === currentSession ? ' active' : '');
+      div.innerHTML = '<span class="session-name">' + escapeHtml(s.name || 'New Chat') + '</span>' +
+        '<button class="session-del" data-id="' + s.id + '">x</button>';
+      div.addEventListener('click', function(e) {
+        if (e.target.classList.contains('session-del')) {
+          deleteSession(e.target.dataset.id);
+        } else {
+          selectSession(s.id);
+        }
+      });
+      elSessionList.appendChild(div);
+    });
+  }
+
+  function renderMessages(msgs) {
+    if (!msgs || msgs.length === 0) {
+      elMessages.innerHTML = '<div class="empty"><h2>Start a conversation</h2><p>Ask me anything about blog writing, SEO, or content strategy.</p></div>';
+      return;
+    }
+    elMessages.innerHTML = '';
+    msgs.forEach(function(m) {
+      var div = document.createElement('div');
+      div.className = 'msg ' + m.role;
+      div.innerHTML = '<div class="msg-avatar">' + (m.role === 'user' ? 'Y' : 'A') + '</div>' +
+        '<div class="msg-body"><div class="msg-content">' + escapeHtml(m.content) + '</div></div>';
+      elMessages.appendChild(div);
+    });
+    elMessages.scrollTop = elMessages.scrollHeight;
+  }
+
+  function showTyping() {
+    var div = document.createElement('div');
+    div.className = 'msg assistant';
+    div.id = 'typing';
+    div.innerHTML = '<div class="msg-avatar">A</div><div class="msg-body"><div class="typing"><span></span><span></span><span></span></div></div>';
+    elMessages.appendChild(div);
+    elMessages.scrollTop = elMessages.scrollHeight;
+  }
+
+  function hideTyping() {
+    var el = document.getElementById('typing');
+    if (el) el.remove();
+  }
+
+  function addAssistantMessage(text) {
+    var div = document.createElement('div');
+    div.className = 'msg assistant';
+    div.innerHTML = '<div class="msg-avatar">A</div><div class="msg-body"><div class="msg-content">' + escapeHtml(text) + '</div></div>';
+    elMessages.appendChild(div);
+    elMessages.scrollTop = elMessages.scrollHeight;
+  }
+
+  async function loadSessions() {
+    try {
+      var res = await fetch('/agents/orchestrator');
+      if (res.ok) {
+        var data = await res.json();
+        sessions = data.sessions || [];
+        renderSessions();
+      }
+    } catch (e) { console.error('Load sessions error:', e); }
+  }
+
+  async function loadMessages(sessionId) {
+    try {
+      var res = await fetch('/agents/orchestrator/' + sessionId + '/messages');
+      if (res.ok) {
+        var data = await res.json();
+        return data.messages || [];
+      }
+    } catch (e) { console.error('Load messages error:', e); }
+    return [];
+  }
+
+  async function createSession() {
+    try {
+      var res = await fetch('/agents/orchestrator', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({})
+      });
+      if (res.ok) {
+        var session = await res.json();
+        currentSession = session.id;
+        elChatTitle.textContent = session.name || 'New Chat';
+        renderMessages([]);
+        renderSessions();
+        loadSessions();
+      }
+    } catch (e) { console.error('Create session error:', e); }
+  }
+
+  async function deleteSession(sessionId) {
+    try {
+      await fetch('/agents/orchestrator/' + sessionId, { method: 'DELETE' });
+      if (currentSession === sessionId) {
+        currentSession = null;
+        elChatTitle.textContent = 'New Chat';
+        renderMessages([]);
+      }
+      loadSessions();
+    } catch (e) { console.error('Delete session error:', e); }
+  }
+
+  async function selectSession(sessionId) {
+    currentSession = sessionId;
+    var session = sessions.find(function(s) { return s.id === sessionId; });
+    elChatTitle.textContent = session ? (session.name || 'New Chat') : 'New Chat';
+    renderSessions();
+    var msgs = await loadMessages(sessionId);
+    renderMessages(msgs);
+  }
+
+  async function sendMessage() {
+    var text = elInput.value.trim();
+    if (!text || !currentSession || isGenerating) return;
+
+    isGenerating = true;
+    elBtnSend.disabled = true;
+    elInput.value = '';
+
+    var userDiv = document.createElement('div');
+    userDiv.className = 'msg user';
+    userDiv.innerHTML = '<div class="msg-avatar">Y</div><div class="msg-body"><div class="msg-content">' + escapeHtml(text) + '</div></div>';
+    elMessages.appendChild(userDiv);
+    elMessages.scrollTop = elMessages.scrollHeight;
+
+    showTyping();
+
+    try {
+      var res = await fetch('/agents/orchestrator/' + currentSession + '/stream', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: [{ role: 'user', content: text, ts: new Date().toISOString() }] })
+      });
+
+      hideTyping();
+
+      if (res.ok && res.body) {
+        var reader = res.body.getReader();
+        var decoder = new TextDecoder();
+        var fullResponse = '';
+
+        addAssistantMessage('');
+        var lastMsg = elMessages.lastChild.querySelector('.msg-content');
+
+        while (true) {
+          var result = await reader.read();
+          if (result.done) break;
+          fullResponse += decoder.decode(result.value);
+          lastMsg.textContent = fullResponse;
+          elMessages.scrollTop = elMessages.scrollHeight;
+        }
+      } else {
+        addAssistantMessage('Error: Could not get response');
+      }
+    } catch (e) {
+      hideTyping();
+      addAssistantMessage('Error: ' + e.message);
+    }
+
+    isGenerating = false;
+    elBtnSend.disabled = false;
+    elInput.focus();
+  }
+
+  elBtnNew.addEventListener('click', createSession);
+  elBtnSend.addEventListener('click', sendMessage);
+  elBtnNew.addEventListener('click', createSession);
+  elInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+  elInput.addEventListener('input', function() {
+    elInput.style.height = 'auto';
+    elInput.style.height = Math.min(elInput.scrollHeight, 120) + 'px';
+  });
+
+  loadSessions();
+})();
+  </script>
+</body>
+</html>`)
+);
+
+// ── Flue catch-all (MUST be last) ──
 app.route('/', flue());
 
 export default app;

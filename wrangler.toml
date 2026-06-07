@@ -1,0 +1,224 @@
+name = "claude-blog-flue"
+main = "dist/claude_blog_flue/index.js"
+compatibility_date = "2026-04-01"
+compatibility_flags = ["nodejs_compat"]
+
+# AI binding for Workers AI
+
+# -------------------------------------------------
+# Durable Object bindings
+# -------------------------------------------------
+[[durable_objects.bindings]]
+name = "FLUE_REGISTRY"
+class_name = "FlueRegistry"
+
+[[durable_objects.bindings]]
+name = "ORCHESTRATOR"
+class_name = "Orchestrator"
+
+[[durable_objects.bindings]]
+name = "RESEARCHER"
+class_name = "Researcher"
+
+[[durable_objects.bindings]]
+name = "REVIEWER"
+class_name = "Reviewer"
+
+[[durable_objects.bindings]]
+name = "SEO"
+class_name = "Seo"
+
+[[durable_objects.bindings]]
+name = "TRANSLATOR"
+class_name = "Translator"
+
+[[durable_objects.bindings]]
+name = "WRITER"
+class_name = "Writer"
+
+[[durable_objects.bindings]]
+name = "FLUE_WORKFLOW_BLOG_ANALYZE"
+class_name = "BlogAnalyzeWorkflow"
+
+[[durable_objects.bindings]]
+name = "FLUE_WORKFLOW_BLOG_AUDIT"
+class_name = "BlogAuditWorkflow"
+
+[[durable_objects.bindings]]
+name = "FLUE_WORKFLOW_BLOG_BRIEF"
+class_name = "BlogBriefWorkflow"
+
+[[durable_objects.bindings]]
+name = "FLUE_WORKFLOW_BLOG_CALENDAR"
+class_name = "BlogCalendarWorkflow"
+
+[[durable_objects.bindings]]
+name = "FLUE_WORKFLOW_BLOG_CANNIBALIZATION"
+class_name = "BlogCannibalizationWorkflow"
+
+[[durable_objects.bindings]]
+name = "FLUE_WORKFLOW_BLOG_CLUSTER"
+class_name = "BlogClusterWorkflow"
+
+[[durable_objects.bindings]]
+name = "FLUE_WORKFLOW_BLOG_FACTCHECK"
+class_name = "BlogFactcheckWorkflow"
+
+[[durable_objects.bindings]]
+name = "FLUE_WORKFLOW_BLOG_GEO"
+class_name = "BlogGeoWorkflow"
+
+[[durable_objects.bindings]]
+name = "FLUE_WORKFLOW_BLOG_LOCALE_AUDIT"
+class_name = "BlogLocaleAuditWorkflow"
+
+[[durable_objects.bindings]]
+name = "FLUE_WORKFLOW_BLOG_LOCALIZE"
+class_name = "BlogLocalizeWorkflow"
+
+[[durable_objects.bindings]]
+name = "FLUE_WORKFLOW_BLOG_MULTILINGUAL"
+class_name = "BlogMultilingualWorkflow"
+
+[[durable_objects.bindings]]
+name = "FLUE_WORKFLOW_BLOG_OUTLINE"
+class_name = "BlogOutlineWorkflow"
+
+[[durable_objects.bindings]]
+name = "FLUE_WORKFLOW_BLOG_REPURPOSE"
+class_name = "BlogRepurposeWorkflow"
+
+[[durable_objects.bindings]]
+name = "FLUE_WORKFLOW_BLOG_REWRITE"
+class_name = "BlogRewriteWorkflow"
+
+[[durable_objects.bindings]]
+name = "FLUE_WORKFLOW_BLOG_SCHEMA"
+class_name = "BlogSchemaWorkflow"
+
+[[durable_objects.bindings]]
+name = "FLUE_WORKFLOW_BLOG_SEO_CHECK"
+class_name = "BlogSeoCheckWorkflow"
+
+[[durable_objects.bindings]]
+name = "FLUE_WORKFLOW_BLOG_STRATEGY"
+class_name = "BlogStrategyWorkflow"
+
+[[durable_objects.bindings]]
+name = "FLUE_WORKFLOW_BLOG_TRANSLATE"
+class_name = "BlogTranslateWorkflow"
+
+[[durable_objects.bindings]]
+name = "FLUE_WORKFLOW_BLOG_WRITE"
+class_name = "BlogWriteWorkflow"
+
+# -------------------------------------------------
+# Tell Cloudflare that the class exists in the bundle
+# -------------------------------------------------
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["FlueRegistry"]
+
+[[migrations]]
+tag = "v2"
+new_sqlite_classes = ["Orchestrator"]
+
+[[migrations]]
+tag = "v3"
+new_sqlite_classes = ["Researcher"]
+
+[[migrations]]
+tag = "v4"
+new_sqlite_classes = ["Reviewer"]
+
+[[migrations]]
+tag = "v5"
+new_sqlite_classes = ["Seo"]
+
+[[migrations]]
+tag = "v6"
+new_sqlite_classes = ["Translator"]
+
+[[migrations]]
+tag = "v7"
+new_sqlite_classes = ["Writer"]
+
+[[migrations]]
+tag = "v8"
+new_sqlite_classes = ["BlogAnalyzeWorkflow"]
+
+[[migrations]]
+tag = "v9"
+new_sqlite_classes = ["BlogAuditWorkflow"]
+
+[[migrations]]
+tag = "v10"
+new_sqlite_classes = ["BlogBriefWorkflow"]
+
+[[migrations]]
+tag = "v11"
+new_sqlite_classes = ["BlogCalendarWorkflow"]
+
+[[migrations]]
+tag = "v12"
+new_sqlite_classes = ["BlogCannibalizationWorkflow"]
+
+[[migrations]]
+tag = "v13"
+new_sqlite_classes = ["BlogClusterWorkflow"]
+
+[[migrations]]
+tag = "v14"
+new_sqlite_classes = ["BlogFactcheckWorkflow"]
+
+[[migrations]]
+tag = "v15"
+new_sqlite_classes = ["BlogGeoWorkflow"]
+
+[[migrations]]
+tag = "v16"
+new_sqlite_classes = ["BlogLocaleAuditWorkflow"]
+
+[[migrations]]
+tag = "v17"
+new_sqlite_classes = ["BlogLocalizeWorkflow"]
+
+[[migrations]]
+tag = "v18"
+new_sqlite_classes = ["BlogMultilingualWorkflow"]
+
+[[migrations]]
+tag = "v19"
+new_sqlite_classes = ["BlogOutlineWorkflow"]
+
+[[migrations]]
+tag = "v20"
+new_sqlite_classes = ["BlogRepurposeWorkflow"]
+
+[[migrations]]
+tag = "v21"
+new_sqlite_classes = ["BlogRewriteWorkflow"]
+
+[[migrations]]
+tag = "v22"
+new_sqlite_classes = ["BlogSchemaWorkflow"]
+
+[[migrations]]
+tag = "v23"
+new_sqlite_classes = ["BlogSeoCheckWorkflow"]
+
+[[migrations]]
+tag = "v24"
+new_sqlite_classes = ["BlogStrategyWorkflow"]
+
+[[migrations]]
+tag = "v25"
+new_sqlite_classes = ["BlogTranslateWorkflow"]
+
+[[migrations]]
+tag = "v26"
+new_sqlite_classes = ["BlogWriteWorkflow"]
+
+# Increased CPU limit for complex agent operations (5 minutes)
+[durable_objects.limits]
+cpu_ms = 300000

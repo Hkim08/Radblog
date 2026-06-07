@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat - Radblog</title>
+  <link rel="stylesheet" href="/chat.css">
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <span class="sidebar-title">Sessions</span>
+        <button class="btn-new" id="btnNew">+ New</button>
+      </div>
+      <div class="sidebar-list" id="sessionList"></div>
+    </aside>
+    <main class="chat">
+      <header class="chat-header">
+        <h2 id="chatTitle">New Chat</h2>
+        <span class="badge">Orchestrator</span>
+      </header>
+      <div class="messages" id="messages">
+        <div class="empty">
+          <h2>Start a conversation</h2>
+          <p>Ask me anything about blog writing, SEO, or content strategy.</p>
+        </div>
+      </div>
+      <div class="input-area">
+        <div class="input-box">
+          <textarea id="input" placeholder="Type a message..." rows="1"></textarea>
+          <button class="btn-send" id="btnSend">Send</button>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script src="/chat.js"></script>
+</body>
+</html>
